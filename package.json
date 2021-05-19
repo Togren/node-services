@@ -1,13 +1,10 @@
 {
-  "name": "service-windows",
+  "name": "node-services",
   "version": "1.0.0",
-  "description": "",
+  "description": "NodeJS package to install and maintain OS services.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
+  "keywords": ["windows", "linux", "services"],
+  "author": "Tomas Schlepers",
   "license": "ISC",
   "dependencies": {
     "lodash": "^4.17.21",
