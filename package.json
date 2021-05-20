@@ -1,6 +1,6 @@
 {
   "name": "nodejs-services",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NodeJS package to install and maintain OS services.",
   "main": "index.js",
   "keywords": ["windows", "linux", "services"],
@@ -15,5 +15,8 @@
     "eslint": "^7.26.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.23.1"
-  }
+  },
+  "os": [
+     "win32"
+  ]
 }
