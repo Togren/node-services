@@ -50,6 +50,6 @@ const XmlBuilder = (function () {
       return builderObj.buildObject(jsonObj);
     },
   };
-});
+}());
 
 module.exports = XmlBuilder;
