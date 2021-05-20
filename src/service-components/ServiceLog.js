@@ -8,8 +8,8 @@ const _ = require('lodash');
 const shell = require('shelljs');
 
 // Custom
-const { LOG_MODES } = require('src/helpers/constants');
-const { XmlBuilder } = require('src/XmlBuilder');
+const { LOG_MODES } = require('../helpers/constants');
+const XmlBuilder = require('../XmlBuilder');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
@@ -191,4 +191,4 @@ class ServiceLog {
   }
 }
 
-exports.ServiceLog = ServiceLog;
+module.exports = ServiceLog;

@@ -34,7 +34,7 @@ const XmlBuilder = (function () {
     fromJSON(json) {
       let jsonObj = {};
       // Parse JSON string if necessary
-      if (!_.isString(json) || !_.isObject(json)) {
+      if (!_.isString(json) && !_.isObject(json)) {
         throw new TypeError(`To generate XML a string or JSON object is required, received: ${typeof json}`);
       } else if (_.isString(jsonObj)) {
         try {
@@ -52,6 +52,4 @@ const XmlBuilder = (function () {
   };
 });
 
-module.exports = {
-  XmlBuilder,
-};
+module.exports = XmlBuilder;

@@ -8,10 +8,10 @@ const _ = require('lodash');
 const shell = require('shelljs');
 
 // Custom
-const { exec } = require('helpers/exec');
-const { ServiceAccount } = require('service-components/ServiceAccount');
-const { ServiceLog } = require('service-components/ServiceLog');
-const { XmlBuilder } = require('XmlBuilder');
+const { exec } = require('./helpers/exec');
+const ServiceAccount = require('./service-components/ServiceAccount');
+const ServiceLog = require('./service-components/ServiceLog');
+const XmlBuilder = require('./XmlBuilder');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
@@ -114,7 +114,7 @@ class Service {
       configDir = path.resolve(process.cwd(), configDir);
     }
     // Create configuration directory if necessary
-    if (!shell.test('-ed')) {
+    if (!shell.test('-ed', configDir)) {
       shell.mkdir('-p', configDir);
     }
     this._configDirectory = configDir;
@@ -202,28 +202,30 @@ class Service {
   }
 
   toJsonConfig() {
-    const jsonConfig = {};
+    const jsonConfig = {
+      service: {},
+    };
     // Add service ID
-    jsonConfig.id = this.id;
+    jsonConfig.service.id = this.id;
     // Add service Name
-    jsonConfig.name = this.name;
+    jsonConfig.service.name = this.name;
     // Add service executable
-    jsonConfig.executable = this.executable;
+    jsonConfig.service.executable = this.executable;
     // Add service description
     if (this.description) {
-      jsonConfig.description = this.description;
+      jsonConfig.service.description = this.description;
     }
     // Add service arguments
     if (this.args) {
-      jsonConfig.arguments = this.args.join(' ');
+      jsonConfig.service.arguments = this.args.join(' ');
     }
     // Add service logger
     if (this.log) {
-      _.assignIn(jsonConfig, this.log.toJsonConfig());
+      _.assignIn(jsonConfig.service, this.log.toJsonConfig());
     }
     // Add service account
     if (this.serviceaccount) {
-      _.assignIn(jsonConfig, this.serviceaccount.toJsonConfig());
+      _.assignIn(jsonConfig.service, this.serviceaccount.toJsonConfig());
     }
     return jsonConfig;
   }
@@ -232,6 +234,7 @@ class Service {
     // Get config as JSON
     const jsonConfig = this.toJsonConfig();
     // Return XML string
+
     return XmlBuilder.fromJSON(jsonConfig);
   }
 

@@ -7,14 +7,14 @@ const path = require('path');
 const _ = require('lodash');
 
 // Custom
-const { XmlBuilder } = require('src/XmlBuilder');
+const XmlBuilder = require('../XmlBuilder');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
 class ServiceAccount {
   constructor(lib) {
     this.allowServiceLogon = lib.allowServiceLogon || null;
-    this.username = lib.userName || null;
+    this.username = lib.username || null;
     this.password = lib.password || null;
   }
 
@@ -34,7 +34,7 @@ class ServiceAccount {
   }
 
   get username() {
-    return this.username;
+    return this._username;
   }
 
   set username(username) {
@@ -80,10 +80,12 @@ class ServiceAccount {
   }
 
   toJsonConfig() {
-    const jsonConfig = {};
+    const jsonConfig = {
+      serviceaccount: {},
+    };
     // Add allowServiceLogon
     if (this.allowServiceLogon) {
-      jsonConfig.allowservicelogon = this.allowServiceLogon;
+      jsonConfig.serviceaccount.allowservicelogon = this.allowServiceLogon;
     }
     return jsonConfig;
   }
@@ -96,4 +98,4 @@ class ServiceAccount {
   }
 }
 
-exports.ServiceAccount = ServiceAccount;
+module.exports = ServiceAccount;
