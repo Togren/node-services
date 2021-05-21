@@ -3,7 +3,11 @@
   "version": "1.0.1",
   "description": "NodeJS package to install and maintain OS services.",
   "main": "index.js",
-  "keywords": ["windows", "linux", "services"],
+  "keywords": [
+    "windows",
+    "linux",
+    "services"
+  ],
   "author": "Tomas Schlepers",
   "license": "ISC",
   "dependencies": {
@@ -17,6 +21,6 @@
     "eslint-plugin-import": "^2.23.1"
   },
   "os": [
-     "win32"
+    "win32"
   ]
 }

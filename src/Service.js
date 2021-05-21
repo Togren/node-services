@@ -9,6 +9,7 @@ const shell = require('shelljs');
 
 // Custom
 const { exec } = require('./helpers/exec');
+const { addUserToSDDL } = require('./helpers/windows');
 const ServiceAccount = require('./service-components/ServiceAccount');
 const ServiceLog = require('./service-components/ServiceLog');
 const XmlBuilder = require('./XmlBuilder');
@@ -264,6 +265,10 @@ class Service {
     }
     // Execute winsw with config file
     await exec(cmd);
+    // Add username to service SDDL if present
+    if (this.serviceaccount && this.serviceaccount.username) {
+      addUserToSDDL(this.id, this.serviceaccount.username);
+    }
   }
 
   async uninstall() {

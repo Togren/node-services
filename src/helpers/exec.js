@@ -21,6 +21,17 @@ function exec(cmd, opts) {
   });
 }
 
+function execSync(cmd, opts) {
+  const { code, stdout, stderr } = shell.exec(cmd, opts);
+  // Error check
+  if (code !== 0 || stderr) {
+    throw new Error(`Error executing command ${cmd}. Exit code: ${code}, error: ${stderr}.`);
+  }
+  // Return stdout
+  return stdout;
+}
+
 module.exports = {
   exec,
+  execSync,
 };
