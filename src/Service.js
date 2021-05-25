@@ -8,8 +8,9 @@ const _ = require('lodash');
 const shell = require('shelljs');
 
 // Custom
-const { exec } = require('./helpers/exec');
+const { ADMIN_ACCOUNTS } = require('./helpers/constants');
 const { addUserToSDDL } = require('./helpers/windows');
+const { exec } = require('./helpers/exec');
 const ServiceAccount = require('./service-components/ServiceAccount');
 const ServiceLog = require('./service-components/ServiceLog');
 const XmlBuilder = require('./XmlBuilder');
@@ -265,8 +266,9 @@ class Service {
     }
     // Execute winsw with config file
     await exec(cmd);
-    // Add username to service SDDL if present
-    if (this.serviceaccount && this.serviceaccount.username) {
+    // Add username to service SDDL if present and not system admin account
+    if (this.serviceaccount && this.serviceaccount.username
+      && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username)) {
       addUserToSDDL(this.id, this.serviceaccount.username);
     }
   }
