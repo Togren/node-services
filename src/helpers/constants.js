@@ -10,3 +10,13 @@ const LOG_MODES = {
 };
 
 exports.LOG_MODES = LOG_MODES;
+
+// ~~~~~~~~~~~~~~~~~~~~ ADMIN ACCOUNTS ~~~~~~~~~~~~~~~~~~~~ //
+
+const ADMIN_ACCOUNTS = [
+  'LocalSystem',
+  'NT AUTHORITY\\LocalService',
+  'NT AUTHORITY\\NetworkService',
+];
+
+exports.ADMIN_ACCOUNTS = ADMIN_ACCOUNTS;

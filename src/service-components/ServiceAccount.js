@@ -7,6 +7,7 @@ const path = require('path');
 const _ = require('lodash');
 
 // Custom
+const { ADMIN_ACCOUNTS } = require('../helpers/constants');
 const XmlBuilder = require('../XmlBuilder');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
@@ -59,11 +60,7 @@ class ServiceAccount {
     // Ignore password if user is Group Managed Service Account (ending with $).
     // Ignore password if user is LocalSystem, LocalService or NetworkService account.
     if (this.username.charCodeAt(this.username.length - 1) === 36
-    || _.includes([
-      'LocalSystem',
-      'NT AUTHORITY\\LocalService',
-      'NT AUTHORITY\\NetworkService',
-    ], this.username)) {
+    || _.includes(ADMIN_ACCOUNTS, this.username)) {
       pass = null;
     }
     // Password validation
