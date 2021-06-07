@@ -15,7 +15,7 @@ const XmlBuilder = require('../XmlBuilder');
 
 class ServiceLog {
   constructor(lib) {
-    this.logPath = lib.logPath || null;
+    this.logpath = lib.logpath || null;
     this.mode = lib.mode || null;
     this.sizeThreshold = lib.sizeThreshold || null;
     this.keepFiles = lib.keepFiles || null;
@@ -28,11 +28,11 @@ class ServiceLog {
     }
   }
 
-  get logPath() {
-    return this._logPath;
+  get logpath() {
+    return this._logpath;
   }
 
-  set logPath(logPath) {
+  set logpath(logPath) {
     let logDir = logPath;
     if (!_.isNull(logDir)) {
       if (_.isUndefined(logDir)) {
@@ -51,7 +51,7 @@ class ServiceLog {
         shell.mkdir('-p', logDir);
       }
     }
-    this._logPath = logDir;
+    this._logpath = logDir;
   }
 
   get mode() {
@@ -151,8 +151,8 @@ class ServiceLog {
   toJsonConfig() {
     const jsonConfig = {};
     // Add log path
-    if (this.logPath) {
-      jsonConfig.logPath = this.logPath;
+    if (this.logpath) {
+      jsonConfig.logpath = this.logpath;
     }
     // Add mode
     if (this.mode) {
