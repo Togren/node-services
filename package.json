@@ -1,6 +1,6 @@
 {
   "name": "nodejs-services",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "NodeJS package to install and maintain OS services.",
   "main": "index.js",
   "keywords": [
