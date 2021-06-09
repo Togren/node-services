@@ -15,23 +15,29 @@ const ServiceAccount = require('./service-components/ServiceAccount');
 const ServiceLog = require('./service-components/ServiceLog');
 const XmlBuilder = require('./XmlBuilder');
 
+// Errors
+const InvalidTypeError = require('./errors/InvalidTypeError');
+const PropertyRequiredError = require('./errors/PropertyRequiredError');
+const ValidationError = require('./errors/ValidationError');
+const FileNotFoundError = require('./errors/FileNotFoundError');
+
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
 class Service {
   constructor(lib) {
     // Validate input library
     if (_.isNull(lib) || _.isUndefined(lib)) {
-      throw new TypeError('Service constructor should be supplied with a library object, received no input arguments.');
+      throw new PropertyRequiredError('library', 'Service constructor');
     } else if (!_.isObject(lib)) {
-      throw new TypeError(`Service constructor should be supplied with a library object, received ${typeof lib}.`);
+      throw new InvalidTypeError('lib', typeof lib, 'Object');
     } else if (!_.has(lib, 'id')) {
-      throw new RangeError('Service options library should have an ID field.');
+      throw new PropertyRequiredError('id', 'library');
     } else if (!_.has(lib, 'name')) {
-      throw new RangeError('Service options library should have a name field.');
+      throw new PropertyRequiredError('name', 'library');
     } else if (!_.has(lib, 'executable')) {
-      throw new RangeError('Service options library should have an executable field.');
+      throw new PropertyRequiredError('executable', 'library');
     } else if (!_.has(lib, 'configDirectory')) {
-      throw new RangeError('Service options library should have a configuration directory field.');
+      throw new PropertyRequiredError('configDirectory', 'library');
     }
     // Set required options
     this.id = lib.id;
@@ -53,11 +59,11 @@ class Service {
 
   set id(id) {
     if (_.isNull(id) || _.isUndefined(id)) {
-      throw new TypeError('Service ID should be defined and of type string.');
+      throw new PropertyRequiredError('id');
     } else if (!_.isString(id)) {
-      throw new TypeError(`Service ID should be of type string, received ${typeof id}.`);
+      throw new InvalidTypeError('id', typeof id, 'string');
     } else if (id.length === 0) {
-      throw new RangeError('Service ID should not be an empty string.');
+      throw new ValidationError('id should be non-empty string.');
     }
     this._id = id;
   }
@@ -68,11 +74,11 @@ class Service {
 
   set name(name) {
     if (_.isNull(name) || _.isUndefined(name)) {
-      throw new TypeError('Service name should be defined and of type string.');
+      throw new PropertyRequiredError('name');
     } else if (!_.isString(name)) {
-      throw new TypeError(`Service name should be of type string, received ${typeof name}.`);
+      throw new InvalidTypeError('name', typeof name, 'string');
     } else if (name.length === 0) {
-      throw new RangeError('Service name should not be an empty string.');
+      throw new ValidationError('name should be non-empty string.');
     }
     this._name = name;
   }
@@ -83,13 +89,13 @@ class Service {
 
   set executable(executable) {
     if (_.isNull(executable) || _.isUndefined(executable)) {
-      throw new TypeError('Service executable should be defined and of type string.');
+      throw new PropertyRequiredError('executable');
     } else if (!_.isString(executable)) {
-      throw new TypeError(`Service executable should be of type string, received ${typeof executable}.`);
+      throw new InvalidTypeError('executable', typeof executable, 'string');
     } else if (executable.length === 0) {
-      throw new RangeError('Service executable should not be an empty string.');
+      throw new ValidationError('executable should be non-empty string.');
     } else if (!shell.which(executable) || !shell.test('-ef', executable)) {
-      throw new RangeError('Service executable should be in the PATH variable or an absolute path.');
+      throw new ValidationError('executable should exist or be in system path.');
     }
     this._executable = executable;
   }
@@ -104,11 +110,11 @@ class Service {
 
   set configDirectory(configDirectory) {
     if (_.isNull(configDirectory) || _.isUndefined(configDirectory)) {
-      throw new TypeError('Service configuration directory should be defined and of type string.');
+      throw new PropertyRequiredError('configDirectory');
     } else if (!_.isString(configDirectory)) {
-      throw new TypeError(`Service configuration directory should be of type string, received ${typeof configDirectory}.`);
+      throw new InvalidTypeError('configDirectory', typeof configDirectory, 'string');
     } else if (configDirectory.length === 0) {
-      throw new RangeError('Service configuration directory should not be an empty string.');
+      throw new ValidationError('configDirectory should be non-empty string.');
     }
     // Create absolute path
     let configDir = configDirectory;
@@ -138,11 +144,11 @@ class Service {
   set description(description) {
     if (!_.isNull(description)) {
       if (_.isUndefined(description)) {
-        throw new TypeError('Service description cannot be undefined.');
+        throw new PropertyRequiredError('description');
       } else if (!_.isString(description)) {
-        throw new TypeError(`Service description should be of type string, received ${typeof description}.`);
+        throw new InvalidTypeError('description', typeof description, 'string');
       } else if (description.length === 0) {
-        throw new RangeError('Service description should not be an empty string.');
+        throw new ValidationError('description should be non-empty string.');
       }
       this._description = description;
     }
@@ -155,11 +161,11 @@ class Service {
   set args(args) {
     if (!_.isNull(args)) {
       if (_.isUndefined(args)) {
-        throw new TypeError('Service arguments cannot be undefined.');
+        throw new PropertyRequiredError('description');
       } else if (!_.isArray(args)) {
-        throw new TypeError(`Service arguments should be of type array, received ${typeof args}.`);
+        throw new InvalidTypeError('args', typeof args, 'Array');
       } else if (args.length === 0) {
-        throw new RangeError('Service arguments array should have at least one entry.');
+        throw new ValidationError('args should be a non-empty array.');
       }
     }
     this._args = args;
@@ -172,11 +178,11 @@ class Service {
   set log(log) {
     if (!_.isNull(log)) {
       if (_.isUndefined(log)) {
-        throw new TypeError('Service log configuration cannot be undefined.');
+        throw new PropertyRequiredError('log');
       } else if (!_.isObject(log)) {
-        throw new TypeError(`Service log configuration should be of type object, received ${typeof log}.`);
+        throw new InvalidTypeError('log', typeof log, 'Object');
       } else if (Object.keys(log).length === 0) {
-        throw new RangeError('Service log configuration should have at least one key.');
+        throw new ValidationError('log should be a non-empty object.');
       }
       this._log = new ServiceLog(log);
     } else {
@@ -191,11 +197,11 @@ class Service {
   set serviceaccount(serviceaccount) {
     if (!_.isNull(serviceaccount)) {
       if (_.isUndefined(serviceaccount)) {
-        throw new TypeError('Service account configuration cannot be undefined.');
+        throw new PropertyRequiredError('serviceaccount');
       } else if (!_.isObject(serviceaccount)) {
-        throw new TypeError(`Service account configuration should be of type object, received ${typeof serviceaccount}.`);
+        throw new InvalidTypeError('serviceaccount', typeof serviceaccount, 'Object');
       } else if (Object.keys(serviceaccount).length === 0) {
-        throw new RangeError('Service account configuration should have at least one key.');
+        throw new ValidationError('serviceaccount should be a non-empty object.');
       }
       this._serviceaccount = new ServiceAccount(serviceaccount);
     } else {
@@ -274,20 +280,35 @@ class Service {
   }
 
   async uninstall() {
-    // Execute winsw with config file
-    await exec(`${this.winswExec} uninstall ${this.configPath}`);
-    // Remove config file
-    shell.rm('-f', this.configPath);
+    // Validate if configuration file exists
+    if (shell.test('-ef', this.configPath)) {
+      // Execute winsw with config file
+      await exec(`${this.winswExec} uninstall ${this.configPath}`);
+      // Remove config file
+      shell.rm('-f', this.configPath);
+    } else {
+      throw new FileNotFoundError(this.configPath);
+    }
   }
 
   async start() {
-    // Execute winsw with config file
-    await exec(`${this.winswExec} start ${this.configPath}`);
+    // Validate if configuration file exists
+    if (shell.test('-ef', this.configPath)) {
+      // Execute winsw with config file
+      await exec(`${this.winswExec} start ${this.configPath}`);
+    } else {
+      throw new FileNotFoundError(this.configPath);
+    }
   }
 
   async stop() {
-    // Execute winsw with config file
-    await exec(`${this.winswExec} stop ${this.configPath}`);
+    // Validate if configuration file exists
+    if (shell.test('-ef', this.configPath)) {
+      // Execute winsw with config file
+      await exec(`${this.winswExec} stop ${this.configPath}`);
+    } else {
+      throw new FileNotFoundError(this.configPath);
+    }
   }
 
   async reinstall() {

@@ -1,7 +1,6 @@
 // ~~~~~~~~~~~~~~~~~~~~ IMPORTS ~~~~~~~~~~~~~~~~~~~~ //
 
 // NodeJS native
-const path = require('path');
 
 // NPM packages
 const _ = require('lodash');
@@ -9,6 +8,11 @@ const _ = require('lodash');
 // Custom
 const { ADMIN_ACCOUNTS } = require('../helpers/constants');
 const XmlBuilder = require('../XmlBuilder');
+
+// Errors
+const InvalidTypeError = require('../errors/InvalidTypeError');
+const PropertyRequiredError = require('../errors/PropertyRequiredError');
+const ValidationError = require('../errors/ValidationError');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
@@ -26,9 +30,9 @@ class ServiceAccount {
   set allowServiceLogon(allowServiceLogon) {
     if (!_.isNull(allowServiceLogon)) {
       if (_.isUndefined(allowServiceLogon)) {
-        throw new TypeError('Allow service logon should be defined and of type boolean.');
+        throw new PropertyRequiredError('allowServiceLogon');
       } else if (!_.isBoolean(allowServiceLogon)) {
-        throw new TypeError(`Allow service logon should be of type boolean, received ${typeof allowServiceLogon}`);
+        throw new InvalidTypeError('allowServiceLogon', typeof allowServiceLogon, 'boolean');
       }
     }
     this._allowServiceLogon = allowServiceLogon;
@@ -41,11 +45,11 @@ class ServiceAccount {
   set username(username) {
     if (!_.isNull(username)) {
       if (_.isUndefined(username)) {
-        throw new TypeError('Username should be defined and of type string.');
+        throw new PropertyRequiredError('username');
       } else if (!_.isString(username)) {
-        throw new TypeError(`Username should be of type string, received ${typeof username}`);
+        throw new InvalidTypeError('allowServiceLogon', typeof username, 'string');
       } else if (username.length === 0) {
-        throw new RangeError('Username should not be an empty string.');
+        throw new ValidationError('username should be a non-empty string.');
       }
     }
     this._username = username;
@@ -66,11 +70,11 @@ class ServiceAccount {
     // Password validation
     if (!_.isNull(pass)) {
       if (_.isUndefined(pass)) {
-        throw new TypeError('Password for user should be defined and of type string.');
+        throw new PropertyRequiredError('password');
       } else if (!_.isString(pass)) {
-        throw new TypeError(`Password for user should be of type string, received ${typeof pass}.`);
+        throw new InvalidTypeError('password', typeof password, 'string');
       } else if (pass.length === 0) {
-        throw new RangeError('Password for user should not be an empty string.');
+        throw new ValidationError('password should be a non-empty string.');
       }
     }
     this._password = password;

@@ -6,6 +6,7 @@
 const shell = require('shelljs');
 
 // Custom
+const ExecutionError = require('../errors/ExecutionError');
 
 // ~~~~~~~~~~~~~~~~~~~~ EXECUTION ~~~~~~~~~~~~~~~~~~~~ //
 
@@ -14,7 +15,7 @@ function exec(cmd, opts) {
     shell.exec(cmd, opts, (code, stdout, stderr) => {
       // Validate command execution
       if (code !== 0 || stderr) {
-        reject(new Error(`Error executing command: ${cmd}. Exit code: ${code}, error: ${stderr}.`));
+        reject(new ExecutionError(cmd, code, stderr));
       }
       resolve(stdout);
     });
@@ -25,7 +26,7 @@ function execSync(cmd, opts) {
   const { code, stdout, stderr } = shell.exec(cmd, opts);
   // Error check
   if (code !== 0 || stderr) {
-    throw new Error(`Error executing command ${cmd}. Exit code: ${code}, error: ${stderr}.`);
+    throw new ExecutionError(cmd, code, stderr);
   }
   // Return stdout
   return stdout;

@@ -8,6 +8,9 @@ const _ = require('lodash');
 // Custom
 const { execSync } = require('./exec');
 
+// Errors
+const ValidationError = require('../errors/ValidationError');
+
 // ~~~~~~~~~~~~~~~~~~~~ USER ~~~~~~~~~~~~~~~~~~~~ //
 
 function isValidUsername(userName) {
@@ -22,7 +25,7 @@ function isValidUsername(userName) {
 function isUser(userName) {
   let exists = false;
   if (!isValidUsername(userName)) {
-    throw new Error(`When validating user username should be non-empty string of existing user, received ${userName}.`);
+    throw new ValidationError(`Invalid username: ${userName}.`);
   }
   // Validate if user exists
   try {
@@ -37,9 +40,9 @@ function isUser(userName) {
 function getUserSID(userName) {
   // Validate username
   if (!isValidUsername(userName)) {
-    throw new Error(`When fetching user SID username should be non-empty string of existing user, received ${userName}.`);
+    throw new ValidationError(`Invalid username: ${userName}.`);
   } else if (!isUser(userName)) {
-    throw new Error(`When fetching user SID username should be non-empty string of existing user, received ${userName}.`);
+    throw new ValidationError(`Non-existing username: ${userName}.`);
   }
   // Retrieve user SID
   const execResult = execSync(`wmic useraccount where name='${userName}' get sid | find /v "SID"`, { silent: true });
@@ -83,7 +86,7 @@ function isValidSDDL(sddl) {
 
 function getSDDL(id) {
   if (!isValidServiceID(id)) {
-    throw new Error(`When fetching service SDDL ID should be non-empty string of existing service, received ${id}`);
+    throw new ValidationError(`Invalid service ID: ${id}.`);
   }
   // Retrieve the service SDDL
   const SDDL = _.trim(execSync(`sc sdshow ${id}`, { silent: true }));
@@ -92,7 +95,7 @@ function getSDDL(id) {
   const regexMatch = SDDL.match(sddlRegex);
   // Validate if match occurred
   if (!regexMatch) {
-    throw new RangeError(`When fetching the service SDDL the SDDL came back in an unknown format: ${SDDL}.`);
+    throw new ValidationError(`Invalid SDDL format: ${SDDL}.`);
   }
   // Create return object
   const returnObj = {
@@ -107,9 +110,9 @@ function getSDDL(id) {
 function setSDDL(id, sddl) {
   // Validate input parameters
   if (!isValidServiceID(id)) {
-    throw new Error(`When setting service SDDL ID should be non-empty string of existing service, received ${id}`);
+    throw new ValidationError(`Invalid service ID: ${id}.`);
   } else if (!isValidSDDL(sddl)) {
-    throw new Error(`When setting service SDDL it should be non-empty string of correct format, received ${sddl}`);
+    throw new ValidationError(`Invalid SDDL: ${sddl}.`);
   }
   // Set new SDDL
   execSync(`sc sdset ${id} "${sddl}"`, { silent: true });
@@ -118,10 +121,10 @@ function setSDDL(id, sddl) {
 function addUserToSDDL(id, userName) {
   // Validate service ID
   if (!isValidServiceID(id)) {
-    throw new Error(`When adding user to service SDDL ID should be non-empty string of existing service, received ${id}`);
+    throw new ValidationError(`Invalid service ID: ${id}.`);
   } else if (!isUser(userName)) {
     // Validate username
-    throw new Error(`When adding user to service SDDL username should be non-empty string of existing service, received ${userName}`);
+    throw new ValidationError(`Non-existing username: ${userName}.`);
   }
   // Retrieve service SDDL
   const sddl = getSDDL(id);

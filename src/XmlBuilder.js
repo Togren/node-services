@@ -7,6 +7,8 @@ const _ = require('lodash');
 const xml2js = require('xml2js');
 
 // Custom
+const InvalidTypeError = require('./errors/InvalidTypeError');
+const ParseError = require('./errors/ParseError');
 
 // ~~~~~~~~~~~~~~~~~~~~ SINGLETON ~~~~~~~~~~~~~~~~~~~~ //
 
@@ -35,12 +37,12 @@ const XmlBuilder = (function () {
       let jsonObj = {};
       // Parse JSON string if necessary
       if (!_.isString(json) && !_.isObject(json)) {
-        throw new TypeError(`To generate XML a string or JSON object is required, received: ${typeof json}`);
+        throw new InvalidTypeError(json, 'string|Object');
       } else if (_.isString(jsonObj)) {
         try {
           jsonObj = JSON.parse(json);
         } catch (parseErr) {
-          throw new Error(`Error while parsing json string: ${parseErr}`);
+          throw new ParseError('JSON string');
         }
       } else {
         jsonObj = json;

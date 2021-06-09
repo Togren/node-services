@@ -11,6 +11,12 @@ const shell = require('shelljs');
 const { LOG_MODES } = require('../helpers/constants');
 const XmlBuilder = require('../XmlBuilder');
 
+// Errors
+const EnumValidationError = require('../errors/EnumValidationError');
+const InvalidTypeError = require('../errors/InvalidTypeError');
+const PropertyRequiredError = require('../errors/PropertyRequiredError');
+const ValidationError = require('../errors/ValidationError');
+
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
 class ServiceLog {
@@ -23,8 +29,9 @@ class ServiceLog {
     this.autoRollAtTime = lib.autoRollAtTime || null;
 
     // Validation on required fields
-    if (_.includes([LOG_MODES.ROLL_BY_TIME, LOG_MODES.ROLL_BY_SIZE_TIME], this.pattern)) {
-      throw new RangeError('Log mode roll-by(-size)-time requires a date pattern supplied.');
+    if (_.includes([LOG_MODES.ROLL_BY_TIME, LOG_MODES.ROLL_BY_SIZE_TIME], this.mode)
+    && !this.pattern) {
+      throw new ValidationError('Log mode roll-by(-size)-time requires a date pattern supplied.');
     }
   }
 
@@ -36,11 +43,11 @@ class ServiceLog {
     let logDir = logPath;
     if (!_.isNull(logDir)) {
       if (_.isUndefined(logDir)) {
-        throw new TypeError('Log path should be defined and of type string.');
+        throw new PropertyRequiredError('logPath');
       } else if (!_.isString(logDir)) {
-        throw new TypeError(`Log path should be of type string, received ${typeof logDir}.`);
+        throw new InvalidTypeError('logDir', typeof logDir, 'string');
       } else if (logDir.length === 0) {
-        throw new RangeError('Log path should not be an empty string.');
+        throw new ValidationError('logPath should be a non-empty string.');
       }
       // Create absolute path if not already
       if (!path.isAbsolute(logDir)) {
@@ -61,14 +68,13 @@ class ServiceLog {
   set mode(mode) {
     if (!_.isNull(mode)) {
       if (_.isUndefined(mode)) {
-        throw new TypeError('Log mode should be defined and of type string.');
+        throw new PropertyRequiredError('mode');
       } else if (!_.isString(mode)) {
-        throw new TypeError(`Log mode should be of type string, received ${typeof mode}.`);
+        throw new InvalidTypeError('mode', typeof mode, 'string');
       } else if (mode.length === 0) {
-        throw new RangeError('Log mode should not be an empty string.');
+        throw new ValidationError('mode should be a non-empty string.');
       } else if (!_.includes(_.values(LOG_MODES), mode)) {
-        throw new RangeError(`Provided log mode ${mode} not supported. Choose one of the following:
-          ${LOG_MODES}.`);
+        throw new EnumValidationError(`mode is non-supported value ${mode}`);
       }
     }
     this._mode = mode;
@@ -81,13 +87,13 @@ class ServiceLog {
   set sizeThreshold(sizeThreshold) {
     if (!_.isNull(sizeThreshold)) {
       if (_.isUndefined(sizeThreshold)) {
-        throw new TypeError('Log size threshold should be defined and of type number.');
+        throw new PropertyRequiredError('sizeThreshold');
       } else if (!_.isNumber(sizeThreshold)) {
-        throw new TypeError(`Log size threshold should be of type number, received ${typeof sizeThreshold}.`);
+        throw new InvalidTypeError('sizeThreshold', typeof sizeThreshold, 'number');
       } else if (!_.isInteger(sizeThreshold)) {
-        throw new TypeError(`Log size threshold should be an integer, received ${sizeThreshold}.`);
+        throw new InvalidTypeError('sizeThreshold', sizeThreshold, 'integer');
       } else if (parseInt(sizeThreshold, 10) <= 0) {
-        throw new RangeError(`Log size threshold should be larger than 0, received ${sizeThreshold}`);
+        throw new InvalidTypeError('sizeThreshold', sizeThreshold, 'positive integer');
       }
     }
     this._sizeThreshold = sizeThreshold;
@@ -100,13 +106,13 @@ class ServiceLog {
   set keepFiles(keepFiles) {
     if (!_.isNull(keepFiles)) {
       if (_.isUndefined(keepFiles)) {
-        throw new TypeError('Amount of rolled files should be defined and of type number.');
+        throw new PropertyRequiredError('keepFiles');
       } else if (!_.isNumber(keepFiles)) {
-        throw new TypeError(`Amount of rolled files should be of type number, received ${typeof keepFiles}.`);
+        throw new InvalidTypeError('keepFiles', typeof keepFiles, 'number');
       } else if (!_.isInteger(keepFiles)) {
-        throw new TypeError(`Amount of rolled files should be an integer, received ${keepFiles}.`);
+        throw new InvalidTypeError('keepFiles', keepFiles, 'integer');
       } else if (parseInt(keepFiles, 10) <= 0) {
-        throw new RangeError(`Amount of rolled files should be larger than 0, received ${keepFiles}`);
+        throw new InvalidTypeError('keepFiles', keepFiles, 'positive integer');
       }
     }
     this._keepFiles = keepFiles;
@@ -119,11 +125,11 @@ class ServiceLog {
   set pattern(pattern) {
     if (!_.isNull(pattern)) {
       if (_.isUndefined(pattern)) {
-        throw new TypeError('Log file date pattern should be defined and of type string.');
+        throw new PropertyRequiredError('pattern');
       } else if (!_.isString(pattern)) {
-        throw new TypeError(`Log file date pattern should be of type string, received ${typeof pattern}.`);
+        throw new InvalidTypeError('pattern', typeof pattern, 'string');
       } else if (pattern.length === 0) {
-        throw new TypeError('Log file date pattern should not be an empty string.');
+        throw new ValidationError('pattern should be a non-empty string.');
       }
       // TODO: Write validation for date pattern
     }
@@ -137,11 +143,11 @@ class ServiceLog {
   set autoRollAtTime(autoRollAtTime) {
     if (!_.isNull(autoRollAtTime)) {
       if (_.isUndefined(autoRollAtTime)) {
-        throw new TypeError('Log file roll time should be defined and of type string.');
+        throw new PropertyRequiredError('autoRollAtTime');
       } else if (!_.isString(autoRollAtTime)) {
-        throw new TypeError(`Log file roll time should be of type string, received ${typeof autoRollAtTime}.`);
+        throw new InvalidTypeError('autoRollAtTime', typeof autoRollAtTime, 'string');
       } else if (autoRollAtTime.length === 0) {
-        throw new TypeError('Log file roll time should not be an empty string.');
+        throw new ValidationError('autoRollAtTime should be a non-empty string.');
       }
       // TODO: Write validation for time pattern
     }
