@@ -9,7 +9,7 @@ const shell = require('shelljs');
 
 // Custom
 const { ADMIN_ACCOUNTS } = require('./helpers/constants');
-const { addUserToSDDL } = require('./helpers/windows');
+const { sddlHasUserID, addUserToSDDL, isService } = require('./helpers/windows');
 const { exec } = require('./helpers/exec');
 const ServiceAccount = require('./service-components/ServiceAccount');
 const ServiceLog = require('./service-components/ServiceLog');
@@ -20,6 +20,8 @@ const InvalidTypeError = require('./errors/InvalidTypeError');
 const PropertyRequiredError = require('./errors/PropertyRequiredError');
 const ValidationError = require('./errors/ValidationError');
 const FileNotFoundError = require('./errors/FileNotFoundError');
+const InvalidServiceError = require('./errors/InvalidTypeError');
+const ServiceExistsError = require('./errors/ServiceExistsError');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
@@ -258,24 +260,37 @@ class Service {
   }
 
   async install() {
-    // Create XML config file
-    this.writeXmlConfigFile();
-    // Construct installation command
-    let cmd = `${this.winswExec} install ${this.configPath}`;
-    // Add username if present
-    if (this.serviceaccount && this.serviceaccount.username) {
-      cmd += ` --user ${this.serviceaccount.username}`;
-    }
-    // Add password if present
-    if (this.serviceaccount && this.serviceaccount.username && this.serviceaccount.password) {
-      cmd += ` --pass ${this.serviceaccount.password}`;
-    }
-    // Execute winsw with config file
-    await exec(cmd);
-    // Add username to service SDDL if present and not system admin account
-    if (this.serviceaccount && this.serviceaccount.username
-      && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username)) {
-      addUserToSDDL(this.id, this.serviceaccount.username);
+    if (!isService(this.id)) {
+      // Create XML config file
+      this.writeXmlConfigFile();
+      // Construct installation command
+      let cmd = `${this.winswExec} install ${this.configPath}`;
+      // Add username if present
+      if (this.serviceaccount && this.serviceaccount.username) {
+        cmd += ` --user ${this.serviceaccount.username}`;
+      }
+      // Add password if present
+      if (this.serviceaccount && this.serviceaccount.username && this.serviceaccount.password) {
+        cmd += ` --pass ${this.serviceaccount.password}`;
+      }
+      // Execute winsw with config file
+      await exec(cmd);
+      // Add username to service SDDL if present and not system admin account
+      if (this.serviceaccount && this.serviceaccount.username
+        && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username)) {
+        addUserToSDDL(this.id, this.serviceaccount.username);
+      }
+    } else if (!shell.test('-ef', this.configPath)) {
+      // Create XML config file
+      this.writeXmlConfigFile();
+      // Test if user is added to SDDL
+      if (this.serviceaccount && this.serviceaccount.username
+        && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username
+          && sddlHasUserID(this.id, this.serviceaccount.username))) {
+        addUserToSDDL(this.id, this.serviceaccount.username);
+      }
+    } else {
+      throw new ServiceExistsError(this.id);
     }
   }
 
@@ -286,6 +301,8 @@ class Service {
       await exec(`${this.winswExec} uninstall ${this.configPath}`);
       // Remove config file
       shell.rm('-f', this.configPath);
+    } else if (!isService(this.id)) {
+      throw new InvalidServiceError(this.id);
     } else {
       throw new FileNotFoundError(this.configPath);
     }
@@ -296,6 +313,8 @@ class Service {
     if (shell.test('-ef', this.configPath)) {
       // Execute winsw with config file
       await exec(`${this.winswExec} start ${this.configPath}`);
+    } else if (!isService(this.id)) {
+      throw new InvalidServiceError(this.id);
     } else {
       throw new FileNotFoundError(this.configPath);
     }
@@ -306,6 +325,8 @@ class Service {
     if (shell.test('-ef', this.configPath)) {
       // Execute winsw with config file
       await exec(`${this.winswExec} stop ${this.configPath}`);
+    } else if (!isService(this.id)) {
+      throw new InvalidServiceError(this.id);
     } else {
       throw new FileNotFoundError(this.configPath);
     }

@@ -118,6 +118,23 @@ function setSDDL(id, sddl) {
   execSync(`sc sdset ${id} "${sddl}"`, { silent: true });
 }
 
+function sddlHasUserID(id, userName) {
+  // Validate service ID
+  if (!isValidServiceID(id)) {
+    throw new ValidationError(`Invalid service ID: ${id}.`);
+  } else if (!isUser(userName)) {
+    // Validate username
+    throw new ValidationError(`Non-existing username: ${userName}.`);
+  }
+  // Retrieve service SDDL
+  const sddl = getSDDL(id);
+  // Retrieve user SID
+  const userSID = getUserSID(userName);
+  // Add user to DACL
+  const sddlHasUser = sddl.DACL.match(new RegExp(userSID));
+  return !!sddlHasUser;
+}
+
 function addUserToSDDL(id, userName) {
   // Validate service ID
   if (!isValidServiceID(id)) {
@@ -140,5 +157,7 @@ module.exports = {
   getSDDL,
   setSDDL,
   getUserSID,
+  sddlHasUserID,
+  isService,
   addUserToSDDL,
 };
