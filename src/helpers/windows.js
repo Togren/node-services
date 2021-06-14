@@ -56,7 +56,7 @@ function isService(id) {
   // Check if service is present
   if (!_.isNull(id) && !_.isUndefined(id) && _.isString(id) && id.length > 0) {
     try {
-      execSync(`sc query ${id}`);
+      execSync(`sc query ${id}`, {silent: true});
       exists = true;
     } catch (validationErr) {
       // Do nothing, service does not exist

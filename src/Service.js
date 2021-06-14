@@ -20,7 +20,7 @@ const InvalidTypeError = require('./errors/InvalidTypeError');
 const PropertyRequiredError = require('./errors/PropertyRequiredError');
 const ValidationError = require('./errors/ValidationError');
 const FileNotFoundError = require('./errors/FileNotFoundError');
-const InvalidServiceError = require('./errors/InvalidTypeError');
+const InvalidServiceError = require('./errors/InvalidServiceError');
 const ServiceExistsError = require('./errors/ServiceExistsError');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
@@ -274,7 +274,7 @@ class Service {
         cmd += ` --pass ${this.serviceaccount.password}`;
       }
       // Execute winsw with config file
-      await exec(cmd);
+      await exec(cmd, { silent: true });
       // Add username to service SDDL if present and not system admin account
       if (this.serviceaccount && this.serviceaccount.username
         && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username)) {
@@ -296,13 +296,13 @@ class Service {
 
   async uninstall() {
     // Validate if configuration file exists
-    if (shell.test('-ef', this.configPath)) {
+    if (!isService(this.id)) {
+      throw new InvalidServiceError(this.id);
+    } else if (shell.test('-ef', this.configPath)) {
       // Execute winsw with config file
-      await exec(`${this.winswExec} uninstall ${this.configPath}`);
+      await exec(`${this.winswExec} uninstall ${this.configPath}`, { silent: true });
       // Remove config file
       shell.rm('-f', this.configPath);
-    } else if (!isService(this.id)) {
-      throw new InvalidServiceError(this.id);
     } else {
       throw new FileNotFoundError(this.configPath);
     }
@@ -310,11 +310,11 @@ class Service {
 
   async start() {
     // Validate if configuration file exists
-    if (shell.test('-ef', this.configPath)) {
-      // Execute winsw with config file
-      await exec(`${this.winswExec} start ${this.configPath}`);
-    } else if (!isService(this.id)) {
+    if (!isService(this.id)) {
       throw new InvalidServiceError(this.id);
+    } else if (shell.test('-ef', this.configPath)) {
+      // Execute winsw with config file
+      await exec(`${this.winswExec} start ${this.configPath}`, { silent: true });
     } else {
       throw new FileNotFoundError(this.configPath);
     }
@@ -322,11 +322,11 @@ class Service {
 
   async stop() {
     // Validate if configuration file exists
-    if (shell.test('-ef', this.configPath)) {
-      // Execute winsw with config file
-      await exec(`${this.winswExec} stop ${this.configPath}`);
-    } else if (!isService(this.id)) {
+    if (!isService(this.id)) {
       throw new InvalidServiceError(this.id);
+    } else if (shell.test('-ef', this.configPath)) {
+      // Execute winsw with config file
+      await exec(`${this.winswExec} stop ${this.configPath}`, { silent: true });
     } else {
       throw new FileNotFoundError(this.configPath);
     }
