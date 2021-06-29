@@ -19,8 +19,26 @@ const ValidationError = require('../errors/ValidationError');
 class ServiceAccount {
   constructor(lib) {
     this.allowServiceLogon = lib.allowServiceLogon || null;
+    this.domain = lib.domain || null;
     this.username = lib.username || null;
     this.password = lib.password || null;
+  }
+
+  get domain() {
+    return this._domain;
+  }
+
+  set domain(domain) {
+    if (!_.isNull(domain)) {
+      if (_.isUndefined(domain)) {
+        throw new PropertyRequiredError('domain');
+      } else if (!_.isString(domain)) {
+        throw new InvalidTypeError('allowServiceLogon', typeof domain, 'string');
+      } else if (domain.length === 0) {
+        throw new ValidationError('domain should be a non-empty string.');
+      }
+    }
+    this._domain = domain;
   }
 
   get allowServiceLogon() {
@@ -84,6 +102,18 @@ class ServiceAccount {
     const jsonConfig = {
       serviceaccount: {},
     };
+    // Add domain
+    if (this.domain) {
+      jsonConfig.serviceaccount.domain = this.domain;
+    }
+    // Add username
+    if (this.username) {
+      jsonConfig.serviceaccount.username = this.username;
+    }
+    // Add password
+    if (this.password) {
+      jsonConfig.serviceaccount.password = this.password;
+    }
     // Add allowServiceLogon
     if (this.allowServiceLogon) {
       jsonConfig.serviceaccount.allowservicelogon = this.allowServiceLogon;

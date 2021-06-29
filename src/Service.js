@@ -21,7 +21,6 @@ const PropertyRequiredError = require('./errors/PropertyRequiredError');
 const ValidationError = require('./errors/ValidationError');
 const FileNotFoundError = require('./errors/FileNotFoundError');
 const InvalidServiceError = require('./errors/InvalidServiceError');
-const ServiceExistsError = require('./errors/ServiceExistsError');
 
 // ~~~~~~~~~~~~~~~~~~~~ CLASS ~~~~~~~~~~~~~~~~~~~~ //
 
@@ -110,6 +109,10 @@ class Service {
     return this._configPath;
   }
 
+  get serviceExecPath() {
+    return this._serviceExecPath;
+  }
+
   set configDirectory(configDirectory) {
     if (_.isNull(configDirectory) || _.isUndefined(configDirectory)) {
       throw new PropertyRequiredError('configDirectory');
@@ -129,6 +132,7 @@ class Service {
     }
     this._configDirectory = configDir;
     this._configPath = path.join(configDir, `${this.id}.service.xml`);
+    this._serviceExecPath = path.join(configDir, `${this.id}.service.exe`);
   }
 
   get winswExec() {
@@ -211,6 +215,14 @@ class Service {
     }
   }
 
+  configExists() {
+    return shell.test('-ef', this.configPath);
+  }
+
+  serviceExecExists() {
+    return shell.test('-ef', this.serviceExecPath);
+  }
+
   toJsonConfig() {
     const jsonConfig = {
       service: {},
@@ -244,67 +256,78 @@ class Service {
     // Get config as JSON
     const jsonConfig = this.toJsonConfig();
     // Return XML string
-
     return XmlBuilder.fromJSON(jsonConfig);
   }
 
-  writeXmlConfigFile() {
+  setupServiceFiles() {
     // If config file already exists, replace
     if (shell.test('-ef', this.configPath)) {
       shell.rm('-f', this.configPath);
+    }
+    // If executable already exists, replace
+    if (shell.test('-ef', this.serviceExecPath)) {
+      shell.rm('-f', this.serviceExecPath);
     }
     // Write config file
     const xmlString = this.toXmlString();
     shell.touch(this.configPath);
     shell.ShellString(xmlString).to(this.configPath);
+
+    // Copy executable file
+    shell.cp(this.winswExec, this.serviceExecPath);
   }
 
   async install() {
     if (!isService(this.id)) {
       // Create XML config file
-      this.writeXmlConfigFile();
-      // Construct installation command
-      let cmd = `${this.winswExec} install ${this.configPath}`;
-      // Add username if present
-      if (this.serviceaccount && this.serviceaccount.username) {
-        cmd += ` --user ${this.serviceaccount.username}`;
-      }
-      // Add password if present
-      if (this.serviceaccount && this.serviceaccount.username && this.serviceaccount.password) {
-        cmd += ` --pass ${this.serviceaccount.password}`;
-      }
+      this.setupServiceFiles();
       // Execute winsw with config file
-      await exec(cmd, { silent: true });
+      await exec(`${this.serviceExecPath} install`, { silent: true });
       // Add username to service SDDL if present and not system admin account
       if (this.serviceaccount && this.serviceaccount.username
         && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username)) {
         addUserToSDDL(this.id, this.serviceaccount.username);
       }
-    } else if (!shell.test('-ef', this.configPath)) {
-      // Create XML config file
-      this.writeXmlConfigFile();
+    } else {
+      // XML configuration file or executable missing
+      if (!this.configExists() && !this.serviceExecExists()) {
+        this.setupServiceFiles();
+      }
       // Test if user is added to SDDL
       if (this.serviceaccount && this.serviceaccount.username
-        && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username
-          && sddlHasUserID(this.id, this.serviceaccount.username))) {
+          && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username
+            && sddlHasUserID(this.id, this.serviceaccount.username))) {
         addUserToSDDL(this.id, this.serviceaccount.username);
       }
-    } else {
-      throw new ServiceExistsError(this.id);
     }
   }
 
   async uninstall() {
     // Validate if configuration file exists
     if (!isService(this.id)) {
-      throw new InvalidServiceError(this.id);
-    } else if (shell.test('-ef', this.configPath)) {
-      // Execute winsw with config file
-      await exec(`${this.winswExec} uninstall ${this.configPath}`, { silent: true });
-      // Remove config file
-      shell.rm('-f', this.configPath);
+      // Remove XML configuration file
+      if (this.configExists()) {
+        shell.rm('-f', this.configPath);
+      }
+      // Remove service executable
+      if (this.serviceExecExists()) {
+        shell.rm('-f', this.serviceExecPath);
+      }
     } else {
-      throw new FileNotFoundError(this.configPath);
+      // XML configuration file missing
+      if (!this.configExists()) {
+        throw new FileNotFoundError(this.configPath);
+      }
+      // Service executable missing
+      if (!this.serviceExecExists()) {
+        throw new FileNotFoundError(this.serviceExecPath);
+      }
+      // All files present, execute uninstall
+      await exec(`${this.serviceExecPath} uninstall`, { silent: true });
+      // remove XML configuration file
+      shell.rm('-f', this.configPath);
+      // Remove service executable file
+      shell.rm('-f', this.serviceExecPath);
     }
   }
 
@@ -312,11 +335,12 @@ class Service {
     // Validate if configuration file exists
     if (!isService(this.id)) {
       throw new InvalidServiceError(this.id);
-    } else if (shell.test('-ef', this.configPath)) {
-      // Execute winsw with config file
-      await exec(`${this.winswExec} start ${this.configPath}`, { silent: true });
-    } else {
+    } else if (!this.configExists()) {
       throw new FileNotFoundError(this.configPath);
+    } else if (!this.serviceExecExists()) {
+      throw new FileNotFoundError(this.serviceExecPath);
+    } else {
+      await exec(`${this.serviceExecPath} start`, { silent: true });
     }
   }
 
@@ -324,11 +348,13 @@ class Service {
     // Validate if configuration file exists
     if (!isService(this.id)) {
       throw new InvalidServiceError(this.id);
-    } else if (shell.test('-ef', this.configPath)) {
-      // Execute winsw with config file
-      await exec(`${this.winswExec} stop ${this.configPath}`, { silent: true });
-    } else {
+    } else if (!this.configExists()) {
       throw new FileNotFoundError(this.configPath);
+    } else if (!this.serviceExecExists()) {
+      throw new FileNotFoundError(this.serviceExecPath);
+    } else {
+      // Execute winsw with config file
+      await exec(`${this.serviceExecPath} stop`, { silent: true });
     }
   }
 
