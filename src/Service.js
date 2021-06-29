@@ -284,9 +284,9 @@ class Service {
       // Execute winsw with config file
       await exec(`${this.serviceExecPath} install`, { silent: true });
       // Add username to service SDDL if present and not system admin account
-      if (this.serviceaccount && this.serviceaccount.username
-        && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username)) {
-        addUserToSDDL(this.id, this.serviceaccount.username);
+      if (this.serviceaccount && this.serviceaccount.user
+        && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.user)) {
+        addUserToSDDL(this.id, this.serviceaccount.user);
       }
     } else {
       // XML configuration file or executable missing
@@ -294,10 +294,10 @@ class Service {
         this.setupServiceFiles();
       }
       // Test if user is added to SDDL
-      if (this.serviceaccount && this.serviceaccount.username
-          && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.username
-            && sddlHasUserID(this.id, this.serviceaccount.username))) {
-        addUserToSDDL(this.id, this.serviceaccount.username);
+      if (this.serviceaccount && this.serviceaccount.user
+          && !_.includes(ADMIN_ACCOUNTS, this.serviceaccount.user
+            && sddlHasUserID(this.id, this.serviceaccount.user))) {
+        addUserToSDDL(this.id, this.serviceaccount.user);
       }
     }
   }

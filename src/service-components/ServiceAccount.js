@@ -20,7 +20,7 @@ class ServiceAccount {
   constructor(lib) {
     this.allowServiceLogon = lib.allowServiceLogon || null;
     this.domain = lib.domain || null;
-    this.username = lib.username || null;
+    this.user = lib.user || null;
     this.password = lib.password || null;
   }
 
@@ -56,21 +56,21 @@ class ServiceAccount {
     this._allowServiceLogon = allowServiceLogon;
   }
 
-  get username() {
-    return this._username;
+  get user() {
+    return this.user;
   }
 
-  set username(username) {
-    if (!_.isNull(username)) {
-      if (_.isUndefined(username)) {
-        throw new PropertyRequiredError('username');
-      } else if (!_.isString(username)) {
-        throw new InvalidTypeError('allowServiceLogon', typeof username, 'string');
-      } else if (username.length === 0) {
-        throw new ValidationError('username should be a non-empty string.');
+  set user(user) {
+    if (!_.isNull(user)) {
+      if (_.isUndefined(user)) {
+        throw new PropertyRequiredError('user');
+      } else if (!_.isString(user)) {
+        throw new InvalidTypeError('allowServiceLogon', typeof user, 'string');
+      } else if (user.length === 0) {
+        throw new ValidationError('user should be a non-empty string.');
       }
     }
-    this._username = username;
+    this.user = user;
   }
 
   get password() {
@@ -81,8 +81,8 @@ class ServiceAccount {
     let pass = password;
     // Ignore password if user is Group Managed Service Account (ending with $).
     // Ignore password if user is LocalSystem, LocalService or NetworkService account.
-    if (this.username.charCodeAt(this.username.length - 1) === 36
-    || _.includes(ADMIN_ACCOUNTS, this.username)) {
+    if (this.user.charCodeAt(this.user.length - 1) === 36
+    || _.includes(ADMIN_ACCOUNTS, this.user)) {
       pass = null;
     }
     // Password validation
@@ -107,8 +107,8 @@ class ServiceAccount {
       jsonConfig.serviceaccount.domain = this.domain;
     }
     // Add username
-    if (this.username) {
-      jsonConfig.serviceaccount.username = this.username;
+    if (this.user) {
+      jsonConfig.serviceaccount.user = this.user;
     }
     // Add password
     if (this.password) {
