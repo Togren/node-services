@@ -57,7 +57,7 @@ class ServiceAccount {
   }
 
   get user() {
-    return this.user;
+    return this._user;
   }
 
   set user(user) {
@@ -70,7 +70,7 @@ class ServiceAccount {
         throw new ValidationError('user should be a non-empty string.');
       }
     }
-    this.user = user;
+    this._user = user;
   }
 
   get password() {
